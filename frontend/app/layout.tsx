@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
-import { ClerkProvider, UserButton } from '@clerk/nextjs';
+import type { Metadata, Viewport } from "next";
+import { ClerkProvider } from '@clerk/nextjs';
 import { Geist, Geist_Mono } from "next/font/google";
+import PWAProvider from "@/components/shared/pwa-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,14 +16,32 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "AI Knowledge Assistant",
-  description: "Intelligent RAG chatbot for private document knowledge bases.",
+  description: "Enterprise Document RAG & Multilingual Knowledge Assistant",
   manifest: "/manifest.json",
-  themeColor: "#0b0f19",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "AI Knowledge Assistant",
+    title: "AI Assistant",
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0b0f19",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -39,18 +58,14 @@ export default function RootLayout({
       >
         <head>
           <link rel="manifest" href="/manifest.json" />
-          <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-          <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
-          <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
           <meta name="mobile-web-app-capable" content="yes" />
           <meta name="apple-mobile-web-app-capable" content="yes" />
           <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
           <meta name="apple-mobile-web-app-title" content="AI Assistant" />
           <meta name="application-name" content="AI Assistant" />
-          <meta name="theme-color" content="#0b0f19" />
         </head>
-        <body className="min-h-full flex flex-col selection:bg-blue-600/30 selection:text-blue-200">
-          {children}
+        <body className="min-h-full flex flex-col selection:bg-blue-600/30 selection:text-blue-200 safe-area-all">
+          <PWAProvider>{children}</PWAProvider>
         </body>
       </html>
     </ClerkProvider>

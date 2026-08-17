@@ -143,3 +143,33 @@ body {
   transform: translateY(-4px);
   box-shadow: 0 16px 32px -8px var(--glow-color), 0 0 0 1px var(--primary-accent);
 }
+
+/* Mobile Safe-Area & PWA Utilities */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .safe-top {
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+  .safe-area-all {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Prevent accidental pull-to-refresh on standalone app */
+@media all and (display-mode: standalone) {
+  body {
+    overscroll-behavior-y: contain;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  input, textarea, [contenteditable="true"] {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+}
+
