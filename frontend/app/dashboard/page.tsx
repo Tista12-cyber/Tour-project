@@ -156,12 +156,140 @@ export default function DashboardPage() {
     }
   }, [API_URL, activeConversationId]);
 
+  // Initial Load from Persistent Local Storage & Backend
+  React.useEffect(() => {
+    try {
+      // 1. Restore Documents & Chunks
+      const savedDocs = localStorage.getItem('ai_assistant_documents');
+      if (savedDocs) {
+        const parsedDocs: LocalDocument[] = JSON.parse(savedDocs);
+        if (Array.isArray(parsedDocs) && parsedDocs.length > 0) {
+          setLocalDocs(parsedDocs);
+          localDocsRef.current = parsedDocs;
+          setDocuments(
+            parsedDocs.map((d) => ({
+              id: d.id,
+              original_filename: d.original_filename,
+              file_size: d.file_size,
+              status: d.status,
+              chunk_count: d.chunk_count,
+              created_at: d.created_at,
+            }))
+          );
+          setStats((prev) => ({ ...prev, documents: parsedDocs.length }));
+        }
+      }
+
+      // 2. Restore Conversations
+      const savedConvos = localStorage.getItem('ai_assistant_conversations');
+      let restoredConvoId: string | null = null;
+      if (savedConvos) {
+        const parsedConvos: ConversationItem[] = JSON.parse(savedConvos);
+        if (Array.isArray(parsedConvos) && parsedConvos.length > 0) {
+          setConversations(parsedConvos);
+          setStats((prev) => ({ ...prev, conversations: parsedConvos.length }));
+          const savedActive = localStorage.getItem('ai_assistant_active_convo');
+          restoredConvoId = savedActive && parsedConvos.some((c) => c.id === savedActive) ? savedActive : parsedConvos[0].id;
+          setActiveConversationId(restoredConvoId);
+        }
+      }
+
+      // 3. Restore Messages for active conversation
+      if (restoredConvoId) {
+        const savedMsgs = localStorage.getItem(`ai_assistant_msgs_${restoredConvoId}`);
+        if (savedMsgs) {
+          const parsedMsgs: Message[] = JSON.parse(savedMsgs);
+          if (Array.isArray(parsedMsgs)) {
+            setMessages(parsedMsgs);
+            setStats((prev) => ({ ...prev, messages: parsedMsgs.length }));
+          }
+        }
+      }
+
+      // 4. Restore Notifications
+      const savedNotifs = localStorage.getItem('ai_assistant_notifications');
+      if (savedNotifs) {
+        const parsedNotifs: NotificationItem[] = JSON.parse(savedNotifs);
+        if (Array.isArray(parsedNotifs)) {
+          setNotifications(parsedNotifs);
+        }
+      }
+    } catch (err) {
+      console.warn('Could not read from local storage:', err);
+    }
+
+    loadDashboardData();
+  }, []);
+
+  // Save documents to localStorage whenever updated
+  React.useEffect(() => {
+    localDocsRef.current = localDocs;
+    if (localDocs.length > 0) {
+      try {
+        localStorage.setItem('ai_assistant_documents', JSON.stringify(localDocs));
+      } catch (err) {
+        console.warn('Failed saving documents to storage:', err);
+      }
+    }
+  }, [localDocs]);
+
+  // Save conversations to localStorage whenever updated
+  React.useEffect(() => {
+    if (conversations.length > 0) {
+      try {
+        localStorage.setItem('ai_assistant_conversations', JSON.stringify(conversations));
+      } catch (err) {
+        console.warn('Failed saving conversations to storage:', err);
+      }
+    }
+  }, [conversations]);
+
+  // Save active conversation ID
+  React.useEffect(() => {
+    if (activeConversationId) {
+      try {
+        localStorage.setItem('ai_assistant_active_convo', activeConversationId);
+      } catch {}
+    }
+  }, [activeConversationId]);
+
+  // Save messages for current conversation
+  React.useEffect(() => {
+    if (activeConversationId && messages.length > 0) {
+      try {
+        localStorage.setItem(`ai_assistant_msgs_${activeConversationId}`, JSON.stringify(messages));
+      } catch (err) {
+        console.warn('Failed saving messages to storage:', err);
+      }
+    }
+  }, [messages, activeConversationId]);
+
+  // Save notifications to localStorage
+  React.useEffect(() => {
+    if (notifications.length > 0) {
+      try {
+        localStorage.setItem('ai_assistant_notifications', JSON.stringify(notifications));
+      } catch {}
+    }
+  }, [notifications]);
+
   // Load conversation messages when activeConversationId changes
   React.useEffect(() => {
     if (!activeConversationId) {
       setMessages([]);
       return;
     }
+
+    // First check local storage for instant zero-latency loading
+    try {
+      const cachedMsgs = localStorage.getItem(`ai_assistant_msgs_${activeConversationId}`);
+      if (cachedMsgs) {
+        const parsed = JSON.parse(cachedMsgs);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+        }
+      }
+    } catch {}
 
     async function loadMessages() {
       try {
@@ -182,25 +310,20 @@ export default function DashboardPage() {
               text: c.chunk_text || c.text || '',
             })),
           }));
-          setMessages(msgs);
+          if (msgs.length > 0) {
+            setMessages(msgs);
+            try {
+              localStorage.setItem(`ai_assistant_msgs_${activeConversationId}`, JSON.stringify(msgs));
+            } catch {}
+          }
         }
       } catch (err) {
-        console.error('Failed to load conversation history:', err);
+        console.error('Failed to load conversation history from backend:', err);
       }
     }
 
     loadMessages();
   }, [activeConversationId, API_URL]);
-
-  // Initial load
-  React.useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  // Keep localDocsRef updated
-  React.useEffect(() => {
-    localDocsRef.current = localDocs;
-  }, [localDocs]);
 
   const handleSendMessage = async (content: string) => {
     setIsLoading(true);
