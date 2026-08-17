@@ -164,12 +164,7 @@ body {
 @media all and (display-mode: standalone) {
   body {
     overscroll-behavior-y: contain;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  input, textarea, [contenteditable="true"] {
-    user-select: text;
-    -webkit-user-select: text;
   }
 }
+
 
