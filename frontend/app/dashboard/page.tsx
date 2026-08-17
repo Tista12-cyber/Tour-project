@@ -32,6 +32,7 @@ import ThemeToggle from '@/components/shared/theme-toggle';
 import IndianFlag from '@/components/shared/indian-flag';
 import IndianFlagBackground from '@/components/shared/indian-flag-background';
 import { parsePdfFileToChunks, answerLocally, LocalDocument } from '@/lib/local-rag';
+import { translateText } from '@/lib/translate';
 
 export default function DashboardPage() {
   const { getToken, signOut } = useAuth();
@@ -44,6 +45,7 @@ export default function DashboardPage() {
   const localDocsRef = React.useRef<LocalDocument[]>([]);
   const [notifications, setNotifications] = React.useState<NotificationItem[]>([]);
   const [activeConversationId, setActiveConversationId] = React.useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = React.useState<string>('en');
   const [isLoading, setIsLoading] = React.useState(false);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [isBackendConnected, setIsBackendConnected] = React.useState(true);
@@ -214,6 +216,12 @@ export default function DashboardPage() {
           setNotifications(parsedNotifs);
         }
       }
+
+      // 5. Restore Selected Language
+      const savedLang = localStorage.getItem('ai_assistant_language');
+      if (savedLang) {
+        setSelectedLanguage(savedLang);
+      }
     } catch (err) {
       console.warn('Could not read from local storage:', err);
     }
@@ -325,6 +333,34 @@ export default function DashboardPage() {
     loadMessages();
   }, [activeConversationId, API_URL]);
 
+  const handleLanguageChange = async (newLang: string) => {
+    setSelectedLanguage(newLang);
+    try {
+      localStorage.setItem('ai_assistant_language', newLang);
+    } catch {}
+
+    // Instant multi-language translation for all current assistant messages in chat
+    if (messages.length > 0) {
+      setIsLoading(true);
+      try {
+        const translated = await Promise.all(
+          messages.map(async (m) => {
+            if (m.role === 'assistant') {
+              const tr = await translateText(m.content, newLang);
+              return { ...m, content: tr };
+            }
+            return m;
+          })
+        );
+        setMessages(translated);
+      } catch (err) {
+        console.warn('Error converting chat to language:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
   const handleSendMessage = async (content: string) => {
     setIsLoading(true);
 
@@ -359,10 +395,16 @@ export default function DashboardPage() {
           // Ensure response is not an error string
           if (answerText && !answerText.toLowerCase().includes('ollama is not running')) {
             const rawSources = data.citations || data.sources || data.data?.sources || data.data?.citations || [];
+            
+            // Translate answer if non-English language selected
+            const finalAnswer = selectedLanguage && selectedLanguage !== 'en'
+              ? await translateText(answerText, selectedLanguage)
+              : answerText;
+
             const assistantMsg: Message = {
               id: data.message_id || data.data?.message_id || `assistant-${Date.now()}`,
               role: 'assistant',
-              content: answerText,
+              content: finalAnswer,
               timestamp: new Date(),
               sources: rawSources.map((c: any) => ({
                 filename: c.document_name || c.filename || c.file_name || 'Document',
@@ -396,10 +438,14 @@ export default function DashboardPage() {
       // 2. If backend is offline or failed, perform high-speed grounded RAG locally
       if (!answered) {
         const localResult = answerLocally(content, localDocsRef.current);
+        const finalAnswer = selectedLanguage && selectedLanguage !== 'en'
+          ? await translateText(localResult.answer, selectedLanguage)
+          : localResult.answer;
+
         const assistantMsg: Message = {
           id: `assistant-local-${Date.now()}`,
           role: 'assistant',
-          content: localResult.answer,
+          content: finalAnswer,
           timestamp: new Date(),
           sources: localResult.sources,
         };
@@ -421,10 +467,14 @@ export default function DashboardPage() {
     } catch (err) {
       console.error('Error answering question:', err);
       const localResult = answerLocally(content, localDocsRef.current);
+      const finalAnswer = selectedLanguage && selectedLanguage !== 'en'
+        ? await translateText(localResult.answer, selectedLanguage)
+        : localResult.answer;
+
       const fallbackMsg: Message = {
         id: `err-${Date.now()}`,
         role: 'assistant',
-        content: localResult.answer,
+        content: finalAnswer,
         timestamp: new Date(),
         sources: localResult.sources,
       };
@@ -1028,6 +1078,8 @@ export default function DashboardPage() {
               onSendMessage={handleSendMessage}
               onClearChat={handleClearChat}
               documentCount={stats.documents}
+              selectedLanguage={selectedLanguage}
+              onLanguageChange={handleLanguageChange}
             />
           </div>
         </div>

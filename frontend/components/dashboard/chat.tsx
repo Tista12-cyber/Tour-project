@@ -18,7 +18,10 @@ import {
   ExternalLink,
   Info,
   Layers,
+  Languages,
+  Globe,
 } from 'lucide-react';
+import { SUPPORTED_LANGUAGES } from '@/lib/translate';
 
 export interface Source {
   filename: string;
@@ -45,6 +48,8 @@ interface ChatProps {
   isLoading?: boolean;
   onClearChat?: () => void;
   documentCount?: number;
+  selectedLanguage?: string;
+  onLanguageChange?: (langCode: string) => void;
 }
 
 const STARTER_PROMPTS = [
@@ -60,14 +65,28 @@ export default function Chat({
   isLoading = false,
   onClearChat,
   documentCount = 0,
+  selectedLanguage = 'en',
+  onLanguageChange,
 }: ChatProps) {
   const [input, setInput] = React.useState('');
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
   const [copiedOllamaCmd, setCopiedOllamaCmd] = React.useState(false);
   const [expandedSources, setExpandedSources] = React.useState<Record<string, boolean>>({});
   const [showOllamaHelp, setShowOllamaHelp] = React.useState(false);
+  const [isLangDropdownOpen, setIsLangDropdownOpen] = React.useState(false);
+  const langDropdownRef = React.useRef<HTMLDivElement>(null);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(event.target as Node)) {
+        setIsLangDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -448,14 +467,14 @@ export default function Chat({
 
       {/* Input Form (Fixed Pinned at Bottom) */}
       <div
-        className="shrink-0 border-t p-3.5 sm:p-4 sticky bottom-0 z-10 backdrop-blur-md"
+        className="shrink-0 border-t p-3 sm:p-4 sticky bottom-0 z-10 backdrop-blur-md"
         style={{
           backgroundColor: 'var(--card-inner)',
           borderColor: 'var(--card-border)',
         }}
       >
-        <form onSubmit={handleSubmit} className="flex items-center gap-3">
-          <div className="relative flex-1">
+        <form onSubmit={handleSubmit} className="flex items-center gap-2 sm:gap-3">
+          <div className="relative flex-1 min-w-0">
             <input
               ref={inputRef}
               type="text"
@@ -464,10 +483,18 @@ export default function Chat({
               placeholder={
                 isLoading
                   ? 'Searching documents...'
+                  : selectedLanguage === 'bn'
+                  ? 'আপনার ডকুমেন্ট সম্পর্কে প্রশ্ন জিজ্ঞাসা করুন...'
+                  : selectedLanguage === 'hi'
+                  ? 'अपने दस्तावेज़ के बारे में प्रश्न पूछें...'
+                  : selectedLanguage === 'mr'
+                  ? 'आपल्या दस्तऐवजाबद्दल प्रश्न विचारा...'
+                  : selectedLanguage === 'or'
+                  ? 'ଆପଣଙ୍କ ଡକ୍ୟୁମେଣ୍ଟ ବିଷୟରେ ପ୍ରଶ୍ନ ପଚାରନ୍ତୁ...'
                   : 'Ask a question about your uploaded documents...'
               }
               disabled={isLoading}
-              className="w-full rounded-xl border px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition disabled:opacity-50"
+              className="w-full rounded-xl border px-3.5 sm:px-4 py-2.5 sm:py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition disabled:opacity-50"
               style={{
                 backgroundColor: 'var(--input-bg)',
                 borderColor: 'var(--card-border)',
@@ -476,15 +503,91 @@ export default function Chat({
             />
           </div>
 
+          {/* Multi-Language Selector Dropdown Beside Send Button */}
+          <div className="relative flex-shrink-0" ref={langDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsLangDropdownOpen((prev) => !prev)}
+              className="flex h-10 sm:h-11 items-center gap-1.5 rounded-xl border px-2.5 sm:px-3 text-xs font-semibold shadow-sm transition hover:border-blue-500"
+              style={{
+                backgroundColor: 'var(--card-inner)',
+                borderColor: isLangDropdownOpen ? 'var(--primary-accent)' : 'var(--card-border)',
+                color: 'var(--text-primary)',
+              }}
+              title="Select Response Language (বাংলা, हिन्दी, English, etc.)"
+            >
+              <Globe className="h-4 w-4 text-blue-500 flex-shrink-0" />
+              <span className="max-w-[65px] sm:max-w-[95px] truncate">
+                {SUPPORTED_LANGUAGES.find((l) => l.code === selectedLanguage)?.nativeName || 'English'}
+              </span>
+              <ChevronUp className={`h-3 w-3 text-slate-400 transition-transform ${isLangDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Language Popover Menu */}
+            <AnimatePresence>
+              {isLangDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute bottom-full right-0 mb-2 w-56 rounded-2xl border p-2 shadow-2xl backdrop-blur-xl z-50 origin-bottom-right"
+                  style={{
+                    backgroundColor: 'var(--card-bg)',
+                    borderColor: 'var(--card-border)',
+                  }}
+                >
+                  <div className="px-2 py-1.5 border-b border-slate-700/40 mb-1 flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-blue-400">
+                      Answer Language
+                    </span>
+                    <span className="text-[10px] text-slate-400">11 Languages</span>
+                  </div>
+
+                  <div className="max-h-60 overflow-y-auto space-y-0.5">
+                    {SUPPORTED_LANGUAGES.map((lang) => {
+                      const isSelected = lang.code === selectedLanguage;
+                      return (
+                        <button
+                          key={lang.code}
+                          type="button"
+                          onClick={() => {
+                            if (onLanguageChange) {
+                              onLanguageChange(lang.code);
+                            }
+                            setIsLangDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition ${
+                            isSelected
+                              ? 'bg-blue-600 text-white shadow-sm font-semibold'
+                              : 'hover:bg-slate-800/40 text-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 truncate">
+                            <span>{lang.flag}</span>
+                            <span className="truncate">{lang.nativeName}</span>
+                            <span className="text-[10px] opacity-75 font-normal">({lang.name})</span>
+                          </div>
+                          {isSelected && <Check className="h-3.5 w-3.5 text-white flex-shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Send Button */}
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white font-semibold shadow-sm transition disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-500"
+            className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-blue-600 text-white font-semibold shadow-sm transition disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-500 flex-shrink-0"
           >
             {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
             ) : (
               <Send className="h-4 w-4" />
             )}
