@@ -31,6 +31,7 @@ import QuickStats from '@/components/dashboard/quick-stats';
 import ThemeToggle from '@/components/shared/theme-toggle';
 import IndianFlag from '@/components/shared/indian-flag';
 import IndianFlagBackground from '@/components/shared/indian-flag-background';
+import InstallAppButton from '@/components/shared/install-app-button';
 import { parsePdfFileToChunks, answerLocally, LocalDocument } from '@/lib/local-rag';
 import { translateText } from '@/lib/translate';
 
@@ -816,6 +817,10 @@ export default function DashboardPage() {
               </AnimatePresence>
             </div>
 
+            <div className="hidden sm:inline-flex flex-shrink-0">
+              <InstallAppButton variant="navbar" />
+            </div>
+
             <div className="flex-shrink-0">
               <ThemeToggle />
             </div>
@@ -850,6 +855,12 @@ export default function DashboardPage() {
                 borderColor: 'var(--card-border)',
               }}
             >
+              {/* 1-Click App Download button inside mobile drawer */}
+              <div className="flex items-center justify-between p-2.5 rounded-xl border" style={{ backgroundColor: 'var(--card-inner)', borderColor: 'var(--card-border)' }}>
+                <span className="text-xs font-semibold text-blue-400">Install Native App</span>
+                <InstallAppButton variant="navbar" />
+              </div>
+
               {/* User Profile info with UserButton */}
               {user && (
                 <div
