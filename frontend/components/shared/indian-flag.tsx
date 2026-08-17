@@ -9,19 +9,19 @@ interface IndianFlagProps {
 
 export default function IndianFlag({ size = 'md', showLabel = false }: IndianFlagProps) {
   const dimensions = {
-    sm: { w: 22, h: 15, radius: 2.5 },
-    md: { w: 26, h: 17, radius: 3 },
-    lg: { w: 32, h: 21, radius: 3.5 },
+    sm: { w: 20, h: 13, radius: 2 },
+    md: { w: 24, h: 16, radius: 2.5 },
+    lg: { w: 30, h: 20, radius: 3 },
   }[size];
 
   return (
-    <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-amber-500/20 bg-gradient-to-r from-amber-500/10 via-white/5 to-emerald-500/10 shadow-sm transition hover:scale-105 select-none">
+    <div className="inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md sm:rounded-lg border border-amber-500/20 bg-gradient-to-r from-amber-500/10 via-white/5 to-emerald-500/10 shadow-sm transition hover:scale-105 select-none shrink-0">
       {/* Crisp Official Indian Flag SVG */}
       <svg
         width={dimensions.w}
         height={dimensions.h}
         viewBox="0 0 900 600"
-        className="rounded-sm shadow-xs border border-white/20 flex-shrink-0"
+        className="rounded-xs shadow-xs border border-white/20 flex-shrink-0"
       >
         {/* Saffron Band */}
         <rect width="900" height="200" fill="#FF9933" />

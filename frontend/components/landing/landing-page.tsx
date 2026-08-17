@@ -153,25 +153,29 @@ export function LandingPage() {
         {/* Tri-Color Top Accent Line (Saffron, White, Green) */}
         <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-[#FF9933] via-white to-[#138808] opacity-90 shadow-sm" />
 
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-3.5">
-          <Link href="/" className="flex items-center gap-3 group">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-3.5 sm:px-6 py-2.5 sm:py-3.5">
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 group min-w-0 flex-1 mr-2">
             <motion.div
               whileHover={{ rotate: 10, scale: 1.05 }}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 p-2 shadow-md shadow-blue-600/30 text-white transition-colors group-hover:bg-blue-500"
+              className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-blue-600 p-1.5 sm:p-2 shadow-md shadow-blue-600/30 text-white transition-colors group-hover:bg-blue-500 shrink-0"
             >
-              <BrainCircuit className="h-5 w-5" />
+              <BrainCircuit className="h-4 w-4 sm:h-5 sm:w-5" />
             </motion.div>
-            <span className="text-base font-bold tracking-tight flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-              AI Knowledge Assistant
-              <IndianFlag size="sm" />
-              <span className="rounded-md bg-blue-500/10 text-blue-500 text-[10px] font-mono px-2 py-0.5 border border-blue-500/20 hidden md:inline font-medium">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-sm sm:text-base font-bold tracking-tight truncate max-w-[140px] xs:max-w-[200px] sm:max-w-none" style={{ color: 'var(--text-primary)' }}>
+                AI Knowledge Assistant
+              </span>
+              <div className="shrink-0 hidden xs:inline-flex">
+                <IndianFlag size="sm" />
+              </div>
+              <span className="rounded-md bg-blue-500/10 text-blue-500 text-[10px] font-mono px-2 py-0.5 border border-blue-500/20 hidden md:inline font-medium shrink-0">
                 Enterprise RAG
               </span>
-            </span>
+            </div>
           </Link>
 
           {/* Desktop Navigation Links with Animated Underline */}
-          <nav className="hidden items-center gap-8 text-sm font-medium lg:flex" style={{ color: 'var(--text-secondary)' }}>
+          <nav className="hidden items-center gap-8 text-sm font-medium lg:flex shrink-0" style={{ color: 'var(--text-secondary)' }}>
             <a href="#features" className="transition hover:text-blue-500 hover:-translate-y-0.5">
               Features
             </a>
@@ -184,7 +188,7 @@ export function LandingPage() {
           </nav>
 
           {/* Desktop Navbar Actions */}
-          <div className="hidden sm:flex items-center gap-2.5">
+          <div className="hidden sm:flex items-center gap-2.5 shrink-0">
             <InstallAppButton variant="navbar" />
             <ThemeToggle />
 
@@ -225,25 +229,30 @@ export function LandingPage() {
             )}
           </div>
 
-          {/* Mobile Right Bar: User Profile + Theme Toggle + Menu Hamburger */}
-          <div className="flex items-center gap-2 sm:hidden">
+          {/* Mobile Right Bar: Flag + User Profile + Theme Toggle + Menu Hamburger */}
+          <div className="flex items-center gap-1.5 sm:hidden shrink-0">
+            <div className="xs:hidden flex items-center">
+              <IndianFlag size="sm" />
+            </div>
             {isLoaded && isSignedIn && (
-              <div className="flex items-center">
+              <div className="flex items-center shrink-0">
                 <UserButton />
               </div>
             )}
-            <ThemeToggle />
+            <div className="shrink-0">
+              <ThemeToggle />
+            </div>
             <button
               onClick={() => setMobileMenuOpen((prev) => !prev)}
               aria-label="Toggle mobile menu"
-              className="flex h-9 w-9 items-center justify-center rounded-xl border p-2 transition hover:border-blue-500 shadow-sm"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border p-1.5 transition hover:border-blue-500 shadow-sm shrink-0"
               style={{
                 backgroundColor: 'var(--card-inner)',
                 borderColor: 'var(--card-border)',
                 color: 'var(--text-primary)',
               }}
             >
-              {mobileMenuOpen ? <X className="h-5 w-5 text-blue-500" /> : <Menu className="h-5 w-5" />}
+              {mobileMenuOpen ? <X className="h-4 w-4 text-blue-500" /> : <Menu className="h-4 w-4" />}
             </button>
           </div>
         </div>
