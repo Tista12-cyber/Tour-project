@@ -51,7 +51,7 @@ export default function IndianFlag({ size = 'md', showLabel = false }: IndianFla
         </g>
       </svg>
       {showLabel && (
-        <span className="text-[11px] font-semibold tracking-wide bg-gradient-to-r from-amber-500 via-slate-200 to-emerald-500 bg-clip-text text-transparent">
+        <span className="hidden sm:inline text-[11px] font-semibold tracking-wide bg-gradient-to-r from-amber-500 via-slate-200 to-emerald-500 bg-clip-text text-transparent">
           INDIA
         </span>
       )}
